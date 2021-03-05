@@ -1,0 +1,38 @@
+FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04
+
+# CUDA install
+ENV CUDA_HOME=/usr/local/cuda
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CUDA_HOME/lib64:$CUDA_HOME/extras/CUPTI/lib64"
+ENV LIBRARY_PATH="$LIBRARY_PATH:$CUDA_HOME/include"
+
+# Conda root
+ENV CONDA_ROOT="/conda-envs"
+RUN mkdir /conda-envs
+
+# Add some dependencies
+RUN apt-get clean && \
+    apt-get update -y && apt-get install -y sudo man cmake vim nano tmux wget axel unzip tree git net-tools lsof libmagickwand-dev locales locales-all libsndfile1 ffmpeg htop openssh-server && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* && \
+    wget "http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -O $CONDA_ROOT/Miniconda3-latest-Linux-x86_64.sh && \
+    chmod +x $CONDA_ROOT/Miniconda3-latest-Linux-x86_64.sh && \
+    bash $CONDA_ROOT/Miniconda3-latest-Linux-x86_64.sh -b -p $CONDA_ROOT/miniconda3 && \
+    rm -rf /conda-envs/Miniconda3-latest-Linux-x86_64.sh
+
+ADD ./py36_tf240_pt170_cuda11_cudnn8_squeezeseg.yml conda.yml
+RUN $CONDA_ROOT/miniconda3/bin/conda env update -f conda.yml && \
+    rm -rf /conda-envs/miniconda3/pkgs/* conda.yml ~/.cache ~/.pip ~/.conda && $CONDA_ROOT/miniconda3/bin/conda clean --all -y
+
+# Force to use the system libsndfile. Fix issues when loading FLAC files.
+RUN $CONDA_ROOT/miniconda3/bin/conda remove --force libsndfile
+
+RUN $CONDA_ROOT/miniconda3/bin/conda init bash
+
+RUN mkdir /root/.ssh
+RUN touch /root/.ssh/authorized_keys
+
+# Set the locale
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+
+#CMD /etc/init.d/ssh start
