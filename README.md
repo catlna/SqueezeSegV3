@@ -156,5 +156,35 @@ python evaluate_iou.py -d /path/to/dataset -p /path/to/predictions/ --split vali
 ## Credits
 We referred to RangeNet++ ([Paper](http://www.ipb.uni-bonn.de/wp-content/papercite-data/pdf/milioto2019iros.pdf), [Code](https://github.com/PRBonn/lidar-bonnetal)) during our development. We thank the authors of RangeNet++ for open-sourcing their code.
 
+## VinAI Docker Setup
 
+Disclaimer: we are not the authors of SqueezeSegV3 (https://github.com/chenfengxu714/SqueezeSegV3).
 
+You can use this prebuilt docker `nhandnt/py36_tf240_pt170:cuda11_cudnn8_squeezeseg` if you would like to, otherwise build your own docker image as follows.
+### 1. Build docker image
+
+Find a Linux machine with NVIDIA GPU card, GPU driver and docker installed.
+
+```bash
+git clone https://github.com/VinAICommercial/dev-envs.git
+cd dev-envs
+git checkout nhan
+cd dockers
+docker build -f Dockerfile_py36_tf240_pt170_cuda11_cudnn8_squeezeseg -t py36_tf240_pt170:cuda11_cudnn8_squeezeseg .
+cd ../../
+```
+
+### 2. Push to docker hub
+
+* Create account, public repository (for example: `py36_tf240_pt170`). If you create private repository, you will need to enter the authentication information when creating jobs in Tessera.
+* Login to docker hub: `docker login`
+* Tag the docker image, for example: `docker tag py36_tf240_pt170:cuda11_cudnn8_squeezeseg nhandnt/py36_tf240_pt170:cuda11_cudnn8_squeezeseg`
+* Push to docker hub: `docker push nhandnt/py36_tf240_pt170:cuda11_cudnn8_squeezeseg`
+
+### 3. Submit jobs in Tessera
+
+Follow our guideline, enter docker URI: `nhandnt/py36_tf240_pt170:cuda11_cudnn8_squeezeseg` *without* authentication if using public repository. Currently, there is a problem with Tensorboard, untick it while creating job. We can run tensorboard after SSH to the machine.
+
+### Appendix: Running the code in SqueezeSegV3 repository
+
+Some parts of this code might need to be modified to comply with TensorFlow 2 syntax because the original repository was created using TensorFlow 1.
